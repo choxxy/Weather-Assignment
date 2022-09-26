@@ -1,156 +1,48 @@
 package com.apolloagriculture.android.takehomeassignment
 
 import android.content.Context
-import android.graphics.Canvas
-import android.graphics.Color
-import android.graphics.Paint
-import android.graphics.drawable.Drawable
-import android.text.TextPaint
 import android.util.AttributeSet
-import android.view.View
+import android.view.LayoutInflater
+import android.widget.LinearLayout
+import androidx.annotation.DrawableRes
+import com.apolloagriculture.android.takehomeassignment.data.response.Weather
+import com.apolloagriculture.android.takehomeassignment.databinding.WeatherItemBinding
 
-/**
- * TODO: document your custom view class.
- */
-class WeatherView : View {
 
-    private var _exampleString: String? = null // TODO: use a default from R.string...
-    private var _exampleColor: Int = Color.RED // TODO: use a default from R.color...
-    private var _exampleDimension: Float = 0f // TODO: use a default from R.dimen...
+class WeatherView @JvmOverloads constructor(
+    context: Context,
+    attributeSet: AttributeSet? = null,
+    defStyle: Int = 0,
+    defStyleRes: Int = 0
+) :
+    LinearLayout(context, attributeSet, defStyle, defStyleRes) {
 
-    private lateinit var textPaint: TextPaint
-    private var textWidth: Float = 0f
-    private var textHeight: Float = 0f
+    private var binding: WeatherItemBinding
 
-    /**
-     * The text to draw
-     */
-    var exampleString: String?
-        get() = _exampleString
-        set(value) {
-            _exampleString = value
-            invalidateTextPaintAndMeasurements()
-        }
-
-    /**
-     * The font color
-     */
-    var exampleColor: Int
-        get() = _exampleColor
-        set(value) {
-            _exampleColor = value
-            invalidateTextPaintAndMeasurements()
-        }
-
-    /**
-     * In the example view, this dimension is the font size.
-     */
-    var exampleDimension: Float
-        get() = _exampleDimension
-        set(value) {
-            _exampleDimension = value
-            invalidateTextPaintAndMeasurements()
-        }
-
-    /**
-     * In the example view, this drawable is drawn above the text.
-     */
-    var exampleDrawable: Drawable? = null
-
-    constructor(context: Context) : super(context) {
-        init(null, 0)
+    init {
+        binding = WeatherItemBinding.inflate(LayoutInflater.from(context), this, true)
     }
 
-    constructor(context: Context, attrs: AttributeSet) : super(context, attrs) {
-        init(attrs, 0)
+    fun setData(weather: Weather) {
+        binding.weatherIcon.setImageResource(WeatherIcon.getDrawableRes(weather.icon))
+        binding.temperature.text = "${weather.lowTemp.toInt()} - ${weather.highTemp.toInt()} C"
+        binding.weatherDesc.text = weather.description
     }
+}
 
-    constructor(context: Context, attrs: AttributeSet, defStyle: Int) : super(
-        context,
-        attrs,
-        defStyle
-    ) {
-        init(attrs, defStyle)
-    }
+enum class WeatherIcon(@DrawableRes val res: Int) {
+    CLEAR_DAY(R.drawable.ic_weather_clear_day),
+    SCATTERED_CLOUDS_DAY(R.drawable.ic_weather_cloud_sun),
+    BROKEN_OVERCAST_CLOUDS_DAY(R.drawable.ic_weather_some_clouds);
 
-    private fun init(attrs: AttributeSet?, defStyle: Int) {
-        // Load attributes
-        val a = context.obtainStyledAttributes(
-            attrs, R.styleable.WeatherView, defStyle, 0
-        )
-
-        _exampleString = a.getString(
-            R.styleable.WeatherView_exampleString
-        )
-        _exampleColor = a.getColor(
-            R.styleable.WeatherView_exampleColor,
-            exampleColor
-        )
-        // Use getDimensionPixelSize or getDimensionPixelOffset when dealing with
-        // values that should fall on pixel boundaries.
-        _exampleDimension = a.getDimension(
-            R.styleable.WeatherView_exampleDimension,
-            exampleDimension
-        )
-
-        if (a.hasValue(R.styleable.WeatherView_exampleDrawable)) {
-            exampleDrawable = a.getDrawable(
-                R.styleable.WeatherView_exampleDrawable
-            )
-            exampleDrawable?.callback = this
-        }
-
-        a.recycle()
-
-        // Set up a default TextPaint object
-        textPaint = TextPaint().apply {
-            flags = Paint.ANTI_ALIAS_FLAG
-            textAlign = Paint.Align.LEFT
-        }
-
-        // Update TextPaint and text measurements from attributes
-        invalidateTextPaintAndMeasurements()
-    }
-
-    private fun invalidateTextPaintAndMeasurements() {
-        textPaint.let {
-            it.textSize = exampleDimension
-            it.color = exampleColor
-            textWidth = it.measureText(exampleString)
-            textHeight = it.fontMetrics.bottom
-        }
-    }
-
-    override fun onDraw(canvas: Canvas) {
-        super.onDraw(canvas)
-
-        // TODO: consider storing these as member variables to reduce
-        // allocations per draw cycle.
-        val paddingLeft = paddingLeft
-        val paddingTop = paddingTop
-        val paddingRight = paddingRight
-        val paddingBottom = paddingBottom
-
-        val contentWidth = width - paddingLeft - paddingRight
-        val contentHeight = height - paddingTop - paddingBottom
-
-        exampleString?.let {
-            // Draw the text.
-            canvas.drawText(
-                it,
-                paddingLeft + (contentWidth - textWidth) / 2,
-                paddingTop + (contentHeight + textHeight) / 2,
-                textPaint
-            )
-        }
-
-        // Draw the example drawable on top of the text.
-        exampleDrawable?.let {
-            it.setBounds(
-                paddingLeft, paddingTop,
-                paddingLeft + contentWidth, paddingTop + contentHeight
-            )
-            it.draw(canvas)
+    companion object {
+        @DrawableRes
+        fun getDrawableRes(key: String): Int {
+            return try {
+                valueOf(key.uppercase()).res
+            } catch (ex: Exception) {
+                R.drawable.ic_weather_clear_day
+            }
         }
     }
 }

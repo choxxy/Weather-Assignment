@@ -1,12 +1,16 @@
 package com.apolloagriculture.android.takehomeassignment
 
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.content.ContentProviderCompat.requireContext
+import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
+import com.apolloagriculture.android.takehomeassignment.data.response.Forecast
+import com.apolloagriculture.android.takehomeassignment.data.response.Weather
 import com.apolloagriculture.android.takehomeassignment.databinding.FragmentSecondBinding
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 /**
  * A simple [Fragment] subclass as the second destination in the navigation.
@@ -14,6 +18,7 @@ import com.apolloagriculture.android.takehomeassignment.databinding.FragmentSeco
 class SecondFragment : Fragment() {
 
     private var _binding: FragmentSecondBinding? = null
+    private val weatherViewModel: WeatherViewModel by viewModel()
 
     // This property is only valid between onCreateView and
     // onDestroyView.
@@ -22,7 +27,7 @@ class SecondFragment : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
 
         _binding = FragmentSecondBinding.inflate(inflater, container, false)
         return binding.root
@@ -32,9 +37,24 @@ class SecondFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        binding.buttonSecond.setOnClickListener {
-            findNavController().navigate(R.id.action_SecondFragment_to_FirstFragment)
+        weatherViewModel.getWeatherForecast().observe(viewLifecycleOwner) {
+            updateUI(it)
         }
+    }
+
+    private fun updateUI(forecast: Forecast) {
+        binding.weatherContainer.removeAllViews()
+        forecast["today"]?.let { createWeatherWidget(it) }
+        forecast["tomorrow"]?.let { createWeatherWidget(it) }
+        forecast["dayAfterTomorrow"]?.let { createWeatherWidget(it) }
+
+    }
+
+    private fun createWeatherWidget(weather: Weather) {
+        val weatherView = WeatherView(requireContext()).apply {
+            setData(weather)
+        }
+        binding.weatherContainer.addView(weatherView)
     }
 
     override fun onDestroyView() {
